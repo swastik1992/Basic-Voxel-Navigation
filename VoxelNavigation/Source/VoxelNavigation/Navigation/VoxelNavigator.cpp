@@ -258,3 +258,17 @@ void AVoxelNavigator::DebugVoxels(float time)
 		}
 	}
 }
+
+void AVoxelNavigator::RefreshVoxels()
+{
+	navVoxels.Empty();
+
+	gridSizeX = (navigationVolume->GetScaledBoxExtent().X / voxelSize) * 2;
+	gridSizeY = (navigationVolume->GetScaledBoxExtent().Y / voxelSize) * 2;
+	gridSizeZ = (navigationVolume->GetScaledBoxExtent().Z / voxelSize) * 2;
+
+	GenerateNavigationVoxels();
+
+	if (bShouldSurfaceNavigate)
+		CheckForSurfaceVoxel();
+}

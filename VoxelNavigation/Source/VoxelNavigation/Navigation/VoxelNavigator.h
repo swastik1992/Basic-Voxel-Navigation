@@ -26,6 +26,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void DebugVoxels(float time = 10.0f);
 
+	UFUNCTION(BlueprintCallable)
+	void RefreshVoxels();
 	
 	void GenerateNavigationVoxels();
 
@@ -73,10 +75,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bShouldSurfaceNavigate;
 
-private:
-
 	UPROPERTY()
 	FVoxelXYZ navVoxels;
+
+private:
 
 	int32 gridSizeX, gridSizeY, gridSizeZ;
 	FCollisionQueryParams voxelCollisionQueryParams;

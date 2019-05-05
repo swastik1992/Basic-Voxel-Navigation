@@ -9,6 +9,9 @@
 //https://stackoverflow.com/questions/28002/regular-cast-vs-static-cast-vs-dynamic-cast
 //https://api.unrealengine.com/INT/API/Runtime/Engine/Components/ULineBatchComponent/index.html
 
+//Navigation component.
+//Error handling 
+//Github Info Page with gifs and flow.
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
@@ -16,6 +19,8 @@
 #include "WorldCollision.h"
 #include "Components/LineBatchComponent.h"
 #include "Engine.h"
+#include <queue>
+#include <vector>
 #include "VoxelUtils.generated.h"
 
 #define MAX_VOXEL_NEIGHBOUR 18
@@ -143,6 +148,94 @@ struct FVoxelXYZ
 		}
 		x.Empty();
 	}
+};
+
+
+//Priority queue to store pathfinding querys' voxels with its distance (and or heuristics).
+template<typename T>
+struct PriorityQueue
+{
+	//A user-provided Compare can be supplied to change the ordering, e.g. using std::greater<T> would cause the smallest element to appear as the top(). 
+	std::priority_queue<std::pair< int32, T>, std::vector<std::pair<int32, T>>, std::greater< std::pair<int32, T>>> p_queue;
+
+	inline void push(int32 val, T queueElement)
+	{
+		p_queue.emplace(val, queueElement);
+	}
+
+	inline bool empty() { return p_queue.empty(); }
+
+	inline T pop()
+	{
+		if (!p_queue.size())
+			return nullptr;
+
+		T item = p_queue.top().second;
+		p_queue.pop();
+		return item;
+	}
+};
+
+UENUM()
+enum class EVoxelNavigationStatus : uint8
+{
+	NotStarted,
+	InProgress,
+	Failed,
+	Succeded,
+	TimeOut
+};
+
+USTRUCT(BlueprintType)
+struct FVoxelPathFindingData
+{
+	GENERATED_USTRUCT_BODY()
+
+	FVoxelPathFindingData() {}
+
+	FVoxelPathFindingData(AActor* _actor, FVector _origin, FVector _destination, FVoxel* _originVoxel, FVoxel* _destinationVoxel, bool _bUseSurfaceVoxel)
+		: actor(_actor), origin(_origin), destination(_destination), originVoxel(_originVoxel), destinationVoxel(_destinationVoxel), bUseSurfaceVoxels(_bUseSurfaceVoxel)
+	{}
+
+	/*Input Params*/
+
+	UPROPERTY(BlueprintReadOnly)
+	TWeakObjectPtr<AActor> actor;
+
+	UPROPERTY(BlueprintReadOnly)
+	FVector origin;
+
+	UPROPERTY(BlueprintReadOnly)
+	FVector destination;
+
+	FVoxel* originVoxel;
+
+	FVoxel* destinationVoxel;
+
+	bool  bUseSurfaceVoxels;
+
+	/*---Input Params---*/
+
+	/*Output Data*/
+
+	PriorityQueue<FVoxel*> frontier;
+	TMap<FVoxel*, uint32> weightMap;
+
+	TArray<FVoxel*> voxelPath;
+	TArray<FVector> vectorPath;
+
+	TMap<FVoxel*, FVoxel*> pathMap;
+
+	float timeTaken = 0.0f;
+
+	int32 iterationCount = 0;
+
+	UPROPERTY(BlueprintReadOnly)
+	EVoxelNavigationStatus status = EVoxelNavigationStatus::NotStarted;
+
+	bool bFoundPath = false;
+
+	/*Output Data*/
 };
 
 
